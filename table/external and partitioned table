@@ -15,9 +15,8 @@ h1b_partitioned table
 
 set hive.exec.dynamic.partition.mode=nonstrict
 
-CREATE TABLE h1b_partitioned(emp_name string,job_title STRING, soc_name string,prevailing_wage bigint,worksite string,year string)
+CREATE TABLE h1b_partitioned(emp_name string,job_title STRING,full_time_position, soc_name string,prevailing_wage bigint,worksite string,year string)
 partitioned by (case_status string)
-clustered by (year) into 6 buckets
 row format delimited
 fields terminated by '\t'
 STORED AS TEXTFILE;
@@ -25,5 +24,5 @@ STORED AS TEXTFILE;
 from h1b_final_external ext 
 INSERT OVERWRITE TABLE h1b_partitioned
 PARTITION(case_status) 
-select ext.employer_name,ext.job_title, ext.soc_name,ext.prevailing_wage,ext.worksite, ext.year,ext.case_status
+select ext.employer_name,ext.job_title,ext.full_time_position, ext.soc_name,ext.prevailing_wage,ext.worksite, ext.year,ext.case_status
 DISTRIBUTE By case_status;
