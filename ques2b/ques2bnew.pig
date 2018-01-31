@@ -1,22 +1,24 @@
-ques2bbag= load '/user/hive/warehouse/h1b_project.db/h1b_final' using PigStorage('\t')
+ques2bbag= LOAD '/user/hive/warehouse/h1b_project.db/h1b_final' USING PIGSTORAGE('\t')
 	AS
 (s_no:int, case_status:chararray, emp_name:chararray, soc_name:chararray, job_title:chararray, position:chararray, wage:double, year:chararray, worksite:chararray, logitute:double,latitute:double);
 
-filtervalue= FOREACH ques2bbag GENERATE year, worksite;
+columnvalue= FOREACH ques2bbag GENERATE year, worksite,case_status;
 
-groupby2col= group filtervalue by (year,worksite);
+filtervalue= FILTER columnvalue BY case_status== 'CERTIFIED'; 
 
-finalgroupbag= FOREACH groupby2col GENERATE group as firstcol,COUNT(filtervalue.worksite)as job; 
+groupby2col= GROUP filtervalue BY (year,worksite);
 
-grouponyr= group finalgroupbag by firstcol.year;
+finalgroupbag= FOREACH groupby2col GENERATE group AS firstcol,COUNT(filtervalue.worksite) AS job; 
+
+grouponyr= GROUP finalgroupbag BY firstcol.year;
 
 
-top5val= foreach grouponyr {
-sorted = order finalgroupbag by $1 desc;
-top5 = limit sorted 5;
-generate flatten(top5);
+top5val= FOREACH grouponyr {
+sorted = ORDER finalgroupbag BY $1 desc;
+top5 = LIMIT sorted 5;
+GENERATE FLATTEN(top5);
 };
-
-store top5val into '/h1b_project_output/ques_2b_output/';
+--dump top5val;
+STORE top5val into '/h1b_project_output/ques_2b_output/';
 
 

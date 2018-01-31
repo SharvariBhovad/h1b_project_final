@@ -1,4 +1,4 @@
-package ques10;
+package ques9;
 
 import java.io.IOException;
 
@@ -15,9 +15,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.Configuration;
 
-public class jobPositionSuccessRate {
+public class EmpSuccessRate {
 
-	public static class JobMapper extends Mapper<LongWritable,Text,Text,Text>{
+	public static class EmpMapper extends Mapper<LongWritable,Text,Text,Text>{
 		private final static IntWritable count=new IntWritable(1);	
 		Text mapKey=new Text();
 		Text mapValue=new Text();
@@ -26,27 +26,34 @@ public class jobPositionSuccessRate {
 			String[] line=value.toString().split("\t");
 			
 			String caseStatus=line[1];
-			String jobposition=line[4];
+			String empName=line[2];
 			
-			mapKey.set(jobposition);
+			mapKey.set(empName);
 			mapValue.set(caseStatus+" , "+count);
-			context.write(mapKey,mapValue);        // key: jobposition value: case_status + 1
+			context.write(mapKey,mapValue);
 			
 		}
 	}
-	public static class JobReducer extends Reducer<Text,Text,Text,Text>{
+	public static class EmpReducer extends Reducer<Text,Text,Text,Text>{
 		Text redValue=new Text();
 		
 		protected void reduce(Text key,Iterable<Text> values,Context context) throws IOException, InterruptedException 
 		{
-			double sum=0.0,certified=0.0,withdrawn=0.0, successrate=0.0, finalsum=0.0;
+			Double sum=0.0;
+			Double certified=0.0;
+			Double withdrawn=0.0;
+			Double successrate=0.0;
+			Double finalsum=0.0;
 			//String caseStatus="";
 			for(Text val: values)
 			{
 			String[] reducerline= val.toString().split(",");
-			double countValue=Double.parseDouble(reducerline[1]);
+			Double countValue=Double.parseDouble(reducerline[1]);
 			String caseStatus=reducerline[0];
-			sum=sum+countValue;				// counting total number of job title
+			sum=sum+countValue;
+				if(sum >= 1000)
+				{
+					finalsum=sum;
 				
 				if(caseStatus.equals("CERTIFIED "))
 				{
@@ -56,29 +63,29 @@ public class jobPositionSuccessRate {
 				{
 					withdrawn++;
 				}
-				if(sum >= 1000)
-				{
-				successrate=((certified + withdrawn)/sum)*100;
+				successrate=((certified + withdrawn)/finalsum)*100;
 				}
 			}
+			
 			if(successrate>70.0)
 			{
 			redValue.set(sum+" , "+Math.round(successrate)+"%");	
-			context.write(key,redValue);		
+			context.write(key,redValue);	
 			}
+			
 		}
 	}
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException
 	{
 		Configuration conf= new Configuration();
-		Job job=Job.getInstance(conf,"job-position-success-rate");
-		job.setJarByClass(jobPositionSuccessRate.class);
+		Job job=Job.getInstance(conf,"emp-success-rate");
+		job.setJarByClass(EmpSuccessRate.class);
 		
-		job.setMapperClass(JobMapper.class);
+		job.setMapperClass(EmpMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
 		
-		job.setReducerClass(JobReducer.class);
+		job.setReducerClass(EmpReducer.class);
 		job.setNumReduceTasks(1);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(DoubleWritable.class);

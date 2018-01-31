@@ -1,0 +1,39 @@
+
+
+start mysql in terminal
+---------------------------
+mysql -u root -p
+
+create database if not present in mysql
+----------------------------------------
+create database h1b_project_mysql;
+
+select database to work on in mysql
+-----------------------------------
+use h1b_project_mysql;
+
+create table 
+------------
+
+create table ques11_output_table(
+job_title nvarchar(128),
+total_count decimal(8,1),
+success_rate int(5)
+);
+mysql> describe ques11_output_table;
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| job_title    | varchar(20)  | YES  |     | NULL    |       |
+| total_count  | decimal(6,2) | YES  |     | NULL    |       |
+| success_rate | decimal(4,2) | YES  |     | NULL    |       |
++--------------+--------------+------+-----+---------+-------+
+3 rows in set (0.18 sec)
+
+
+hadoop jar jobsuccess.jar ques10.jobPositionSuccessRate /user/hive/warehouse/h1b_project.db/h1b_final/ /h1b_project_output/ques10/
+
+
+sqoop export --connect jdbc:mysql://localhost/h1b_project_mysql --username root --P --table ques11_output_table --export-dir /h1b_project_output/ques10a/part-r-00000 --input-fields-terminated-by '\t' -m 1
+
+

@@ -3,6 +3,7 @@ package ques1a;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.hadoop.mapreduce.Job;
@@ -17,7 +18,10 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-public class NoOfPetitionOfDEnew {
+
+
+
+public class NoOfPetitionOfDE {
 
 	public static class PetitionMapper extends Mapper<LongWritable,Text,IntWritable, IntWritable>{
 		IntWritable yearAsKey = new IntWritable();
@@ -32,46 +36,52 @@ public class NoOfPetitionOfDEnew {
 			yearAsKey.set(year);
 			context.write(yearAsKey,counter);
 			}
+			
+			
 		}
 	}
 	public static class PetitionReducer extends Reducer<IntWritable,IntWritable,Text,DoubleWritable>{
 		DoubleWritable result =new DoubleWritable();
-		int year=2011;						// for printing output format
-		double eachYearVal[] = new double[6];
-		int j=0;
+		int year=2010;
+		Double eachYearVal[] = new Double[6];
+		int i=0;
 		public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException
 		{
-			double sum=0.0;
-			double avggrowth=0.0;
+			Double sum=0.0;
 			for(IntWritable val: values)
 			{
-				sum+=val.get();				//count of total number of jobtitle for particular year
+				sum+=val.get();
 			}
-			eachYearVal[j]=sum;				// storing the count of each year in array
-	
-			if(eachYearVal[j]!= 0.0)        
+			eachYearVal[i]=sum;
+			i++;
+		}
+		
+		public void cleanup(Context context) throws IOException, InterruptedException
+		{
+			Double avggrowth=0.0;
+			for(int i=0;i<6;i++)
 			{
-				if (j==0) 					//for first year value no average
+				if (i==0) 
 				{
-			        context.write(new Text(year +" "), new DoubleWritable(0));  // 2011	0
+			        context.write(new Text(year +"-"+(year+1)), new DoubleWritable(0)); 
+			        year++;
 				}
 				else 
 				{
-					avggrowth= ((eachYearVal[j]-eachYearVal[j-1])*100/eachYearVal[j-1]);
-					result.set(Math.round(avggrowth));
-					context.write( new Text(year +"-"+(year+1)), result);
-					year++;
+				avggrowth= ((eachYearVal[i]-eachYearVal[i-1])*100/eachYearVal[i-1]);
+				result.set(Math.round(avggrowth));
+				context.write( new Text(year +"-"+(year+1)), result);
+				year++;
 				}
 			}
-			j++;							// increment array to store value for next year
-		}	
+		}
 	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException 
 	{
 		Configuration conf = new Configuration();
 		Job job= Job.getInstance(conf,"de-petition");
-		job.setJarByClass(NoOfPetitionOfDEnew.class);
+		job.setJarByClass(NoOfPetitionOfDE.class);
 		
 		job.setMapperClass(PetitionMapper.class);
 		job.setMapOutputKeyClass(IntWritable.class);
@@ -82,8 +92,8 @@ public class NoOfPetitionOfDEnew {
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(DoubleWritable.class);
 		
-		FileInputFormat.addInputPath(job, new Path(args[0]));
-		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+	FileInputFormat.addInputPath(job, new Path(args[0]));
+	FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		
 		job.setInputFormatClass(TextInputFormat.class);
 		System.exit(job.waitForCompletion(true) ? 0 : 1);

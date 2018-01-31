@@ -145,7 +145,6 @@ public class Top5AvgGrowth  {
 		FileOutputFormat.setOutputPath(job, outputPath1);
 		FileSystem.get(conf).delete(outputPath1, true);
 		job.waitForCompletion(true);
-
 	//---------------------------------------------------------------
 		Job job2= Job.getInstance(conf,"top 5 avg growth job2");
 		job2.setJarByClass(Top5AvgGrowth.class);

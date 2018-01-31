@@ -30,7 +30,7 @@ public class EmpSuccessRate {
 			
 			mapKey.set(empName);
 			mapValue.set(caseStatus+" , "+count);
-			context.write(mapKey,mapValue);
+			context.write(mapKey,mapValue);				//key : empname value : case_status +1
 			
 		}
 	}
@@ -39,22 +39,14 @@ public class EmpSuccessRate {
 		
 		protected void reduce(Text key,Iterable<Text> values,Context context) throws IOException, InterruptedException 
 		{
-			Double sum=0.0;
-			Double certified=0.0;
-			Double withdrawn=0.0;
-			Double successrate=0.0;
-			Double finalsum=0.0;
-			//String caseStatus="";
+			double sum=0.0,certified=0.0,withdrawn=0.0,successrate=0.0, finalsum=0.0;
 			for(Text val: values)
 			{
 			String[] reducerline= val.toString().split(",");
 			Double countValue=Double.parseDouble(reducerline[1]);
 			String caseStatus=reducerline[0];
-			sum=sum+countValue;
-				if(sum >= 1000)
-				{
-					finalsum=sum;
-				
+			sum=sum+countValue;				//total record
+		
 				if(caseStatus.equals("CERTIFIED "))
 				{
 					certified++;	
@@ -63,7 +55,9 @@ public class EmpSuccessRate {
 				{
 					withdrawn++;
 				}
-				successrate=((certified + withdrawn)/finalsum)*100;
+				if(sum>=1000)
+				{
+				successrate=((certified + withdrawn)/sum)*100;
 				}
 			}
 			
@@ -72,7 +66,6 @@ public class EmpSuccessRate {
 			redValue.set(sum+" , "+Math.round(successrate)+"%");	
 			context.write(key,redValue);	
 			}
-			
 		}
 	}
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException
